@@ -6,7 +6,6 @@ import { share } from 'rxjs/operators';
   providedIn: 'root',
 })
 export class StorageService implements OnDestroy {
-
   private onSubject = new Subject<{ key: string; value: any }>();
   public changes = this.onSubject.asObservable().pipe(share());
 

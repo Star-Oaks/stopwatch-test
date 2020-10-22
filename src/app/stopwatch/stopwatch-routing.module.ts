@@ -4,14 +4,13 @@ import { StopwatchContainerComponent } from './stopwatch-container/stopwatch-con
 
 const routes: Routes = [
   {
-    path:"",
-    component: StopwatchContainerComponent
+    path: '',
+    component: StopwatchContainerComponent,
   },
-
 ];
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class StopwatchRoutingModule { }
+export class StopwatchRoutingModule {}

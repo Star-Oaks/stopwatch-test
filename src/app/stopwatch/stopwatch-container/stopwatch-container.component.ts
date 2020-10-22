@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { SubscriptionLike } from 'rxjs';
 import { DateItem } from '../models/date-item.model';
 import { StorageService } from '../storage.service';
 
@@ -12,11 +13,12 @@ export class StopwatchContainerComponent implements OnInit, OnDestroy {
   private timerRef: number;
   private dateSubscribe: DateItem;
   public start: boolean;
+  private subscription: SubscriptionLike;
 
   constructor(private _storageService: StorageService) {}
 
   ngOnInit(): void {
-    this._storageService.changes.subscribe(() => {
+    this.subscription = this._storageService.changes.subscribe(() => {
       this.dateSubscribe = this._storageService.getStorage();
       if (this.dateSubscribe.running) {
         this.distansStart(this.dateSubscribe);
@@ -25,8 +27,12 @@ export class StopwatchContainerComponent implements OnInit, OnDestroy {
       }
     });
   }
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     clearInterval(this.timerRef);
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+      this.subscription = null;
+    }
   }
 
   private distansStart(dataTime: DateItem) {
@@ -36,7 +42,7 @@ export class StopwatchContainerComponent implements OnInit, OnDestroy {
     }
   }
 
-  public startTimer() {
+  public startTimer(): void {
     if (this.dateSubscribe) {
       this.dateItem.running = !this.dateSubscribe.running;
     } else {
@@ -80,7 +86,7 @@ export class StopwatchContainerComponent implements OnInit, OnDestroy {
       clearInterval(this.timerRef);
     }
   }
-  public lapTimeSplit() {
+  public lapTimeSplit(): void {
     let lapTime =
       this.dateItem.minutes +
       ':' +
@@ -91,7 +97,7 @@ export class StopwatchContainerComponent implements OnInit, OnDestroy {
     this._storageService.store('time', this.dateItem);
   }
 
-  public clearTimer() {
+  public clearTimer(): void {
     clearInterval(this.timerRef);
     this.dateItem = new DateItem();
     this._storageService.store('time', this.dateItem);
