@@ -1,4 +1,5 @@
-import { Component, OnInit, SimpleChanges } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { DateItem } from '../models/date-item.model';
 import { StorageService } from '../storage.service';
 
 @Component({
@@ -6,26 +7,17 @@ import { StorageService } from '../storage.service';
   templateUrl: './stopwatch-container.component.html',
   styleUrls: ['./stopwatch-container.component.scss'],
 })
-export class StopwatchContainerComponent implements OnInit {
-  dateItem = {
-    clock: '',
-    minutes: '',
-    seconds: '',
-    milliseconds: '',
-    laps: [],
-    counter: 0,
-    running: false,
-    startText: 'Start',
-  };
-  timerRef;
-  private dateSubscribe: any;
+export class StopwatchContainerComponent implements OnInit, OnDestroy {
+  public dateItem: DateItem = new DateItem();
+  private timerRef: number;
+  private dateSubscribe: DateItem;
+  public start: boolean;
 
-  start: boolean;
-  showTimerControls: boolean = true;
+  constructor(private _storageService: StorageService) {}
 
-  constructor(private _storageService: StorageService) {
+  ngOnInit(): void {
     this._storageService.changes.subscribe(() => {
-      this.dateSubscribe = JSON.parse(this._storageService.getStorage());
+      this.dateSubscribe = this._storageService.getStorage();
       if (this.dateSubscribe.running) {
         this.distansStart(this.dateSubscribe);
       } else {
@@ -33,29 +25,18 @@ export class StopwatchContainerComponent implements OnInit {
       }
     });
   }
-  ngOnInit(): void {}
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['start'].currentValue) {
-      this.startTimer();
-    } else {
-      this.clearTimer();
-    }
+  ngOnDestroy() {
+    clearInterval(this.timerRef);
   }
-  distansStart(dataTime) {
-    this.dateItem.clock = dataTime.clock;
-    this.dateItem.minutes = dataTime.minutes;
-    this.dateItem.seconds = dataTime.seconds;
-    this.dateItem.milliseconds = dataTime.milliseconds;
-    this.dateItem.laps = dataTime.laps;
-    this.dateItem.counter = dataTime.counter;
-    this.dateItem.running = dataTime.running;
-    this.dateItem.startText = dataTime.startText;
+
+  private distansStart(dataTime: DateItem) {
+    this.dateItem = dataTime;
     if (!this.dateItem.running) {
       clearInterval(this.timerRef);
     }
   }
 
-  startTimer() {
+  public startTimer() {
     if (this.dateSubscribe) {
       this.dateItem.running = !this.dateSubscribe.running;
     } else {
@@ -91,15 +72,15 @@ export class StopwatchContainerComponent implements OnInit {
           this.dateItem.seconds = '' + this.dateItem.seconds;
         }
 
-        this._storageService.store('time', JSON.stringify(this.dateItem));
+        this._storageService.store('time', this.dateItem);
       });
     } else {
       this.dateItem.startText = 'Resume';
-      this._storageService.store('time', JSON.stringify(this.dateItem));
+      this._storageService.store('time', this.dateItem);
       clearInterval(this.timerRef);
     }
   }
-  lapTimeSplit() {
+  public lapTimeSplit() {
     let lapTime =
       this.dateItem.minutes +
       ':' +
@@ -107,22 +88,12 @@ export class StopwatchContainerComponent implements OnInit {
       ':' +
       this.dateItem.milliseconds;
     this.dateItem.laps.push(lapTime);
-    this._storageService.store('time', JSON.stringify(this.dateItem));
+    this._storageService.store('time', this.dateItem);
   }
 
-  clearTimer() {
-    this.dateItem.running = false;
-    this.dateItem.startText = 'Start';
-    this.dateItem.counter = 0;
-    (this.dateItem.milliseconds = ''),
-      (this.dateItem.seconds = ''),
-      (this.dateItem.minutes = '');
-    this.dateItem.laps = [];
+  public clearTimer() {
     clearInterval(this.timerRef);
-    this._storageService.store('time', JSON.stringify(this.dateItem));
-  }
-
-  ngOnDestroy() {
-    clearInterval(this.timerRef);
+    this.dateItem = new DateItem();
+    this._storageService.store('time', this.dateItem);
   }
 }

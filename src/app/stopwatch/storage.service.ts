@@ -6,8 +6,10 @@ import { share } from 'rxjs/operators';
   providedIn: 'root',
 })
 export class StorageService implements OnDestroy {
+
   private onSubject = new Subject<{ key: string; value: any }>();
   public changes = this.onSubject.asObservable().pipe(share());
+
   constructor() {
     this.start();
   }
@@ -23,11 +25,6 @@ export class StorageService implements OnDestroy {
   public store(key: string, data: any): void {
     localStorage.setItem(key, JSON.stringify(data));
     this.onSubject.next({ key: key, value: data });
-  }
-
-  public clear(key) {
-    localStorage.removeItem(key);
-    this.onSubject.next({ key: key, value: null });
   }
 
   private start(): void {
